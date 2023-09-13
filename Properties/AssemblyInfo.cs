@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Biosistemika_plates")]
+[assembly: AssemblyTitle("bs_plates")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Biosistemika_plates")]
+[assembly: AssemblyProduct("bs_plates")]
 [assembly: AssemblyCopyright("Copyright ©  2023")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("51792902-133E-4798-8611-E78C1188B57A")]
+[assembly: Guid("44CF74FB-1491-450E-9295-A0E437CB4012")]
 
 // Version information for an assembly consists of the following four values:
 //
