@@ -1,4 +1,5 @@
 ﻿using System;
+using bs_plates.Classes;
 
 namespace Biosistemika_plates
 {
@@ -47,7 +48,7 @@ namespace Biosistemika_plates
             var utcStart = Initialize();
             
             // Main logic.
-            Console.WriteLine("BLABLA");
+            var plate = new Plate();
             
             // Finalize.
             Finalize(utcStart);
