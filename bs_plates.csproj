@@ -45,6 +45,7 @@
     <ItemGroup>
         <Compile Include="Classes\InputReader.cs" />
         <Compile Include="Classes\Plate.cs" />
+        <Compile Include="Classes\Well.cs" />
         <Compile Include="Program.cs"/>
         <Compile Include="Properties\AssemblyInfo.cs"/>
     </ItemGroup>
