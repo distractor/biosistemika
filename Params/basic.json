@@ -1,0 +1,28 @@
+{
+  "plate_size": 96,
+  "samples": [
+    [
+      "s1",
+      "s2",
+      "s3"
+    ],
+    [
+      "s1",
+      "s2",
+      "s3"
+    ]
+  ],
+  "reagents": [
+    [
+      "a"
+    ],
+    [
+      "b"
+    ]
+  ],
+  "replications": [
+    3,
+    2
+  ],
+  "max_plates": 1
+}

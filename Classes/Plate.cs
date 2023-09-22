@@ -1,63 +1,75 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace bs_plates.Classes
 {
-    public class Plate
+    public class Plate : PlateSetup
     {
-        private int _plateSize;
-        private List<List<string>> _samples;
-        private List<List<string>> _reagents;
-        private List<int> _replications;
-        private int _maxPlates;
+        private readonly List<Well> _wells = new List<Well>();
 
-        private static readonly List<int> AllowedPlateSizes = new List<int> { 96, 384 };
-        private List<Well> _wells = new List<Well>();
-
-        public Plate()
+        /// <summary>
+        /// PLate class.
+        /// </summary>
+        /// <param name="paramsPath">Path to JSON. Empty string if input from terminal.</param>
+        public Plate(string paramsPath)
         {
             // Get initialization parameters.
-            GetInputs();
+            GetInputs(paramsPath);
             // Print the inputs.
             PrintInputs();
 
             // Optimize setup.
-            Preprocess();
             OptimizeSetup();
         }
 
         /// <summary>
         /// Gets input parameters.
         /// </summary>
-        private void GetInputs()
+        /// <param name="paramsPath">Path to JSON. Empty string if input from terminal.</param>
+        private void GetInputs(string paramsPath)
         {
-            // Read plate size.
-            // _plateSize = InputReader.GetInteger("Enter plate size: ", AllowedPlateSizes);
-            _plateSize = 96;
-            // Read experiment names.
-            // _samples = InputReader.GetJsonString<List<List<string>>>("Enter sample names: ");
-            _samples = new List<List<string>>
+            if (paramsPath == string.Empty)
             {
-                new List<string> { "Sample-1", "Sample-2", "Sample-3" },
-                new List<string> { "Sample-1", "Sample-2", "Sample-3" }
-            };
+                // Request input from user via terminal.
+                // Read plate size.
+                PlateSize = InputReader.GetInteger("Enter plate size: ", AllowedPlateSizes);
+                // Read experiment names.
+                Samples = InputReader.GetJsonString<List<List<string>>>("Enter sample names: ");
+                // Read reagents.
+                Reagents = InputReader.GetJsonString<List<List<string>>>("Enter reagents: ");
+                // Read replications.
+                Replications = InputReader.GetJsonString<List<int>>("Enter replication list: ");
+                // Read max number of plates.
+                MaxPlates = InputReader.GetInteger("Enter maximum number of plates: ", null);
+            }
+            else
+            {
+                // Read inputs from JSON.
+                using (var r = new StreamReader(paramsPath))
+                {
+                    var jsonString = r.ReadToEnd();
+                    dynamic jsonObject;
+                    try
+                    {
+                        jsonObject = JObject.Parse(jsonString);
+                    }
+                    catch (JsonReaderException e)
+                    {
+                        Console.WriteLine("Invalid json. Error: '{0}'.", e.Message);
+                        throw;
+                    }
 
-            // Read reagents.
-            // _reagents = InputReader.GetJsonString<List<List<string>>>("Enter reagents: ");
-            _reagents = new List<List<string>>
-            {
-                new List<string> { "pink" },
-                new List<string> { "green" }
-            };
-            // Read replications.
-            // _replications = InputReader.GetJsonString<List<int>>("Enter replication list: ");
-            _replications = new List<int> { 3, 2 };
-            // Read max number of plates.
-            // _maxPlates = InputReader.GetInteger("Enter maximum number of plates: ", null);
-            _maxPlates = 1;
+                    PlateSize = jsonObject.plate_size;
+                    Samples = JsonConvert.DeserializeObject<List<List<string>>>(jsonObject.samples.ToString());
+                    Reagents = JsonConvert.DeserializeObject<List<List<string>>>(jsonObject.reagents.ToString());
+                    Replications = JsonConvert.DeserializeObject<List<int>>(jsonObject.replications.ToString());
+                    MaxPlates = jsonObject.max_plates;
+                }
+            }
         }
 
         /// <summary>
@@ -66,29 +78,32 @@ namespace bs_plates.Classes
         private void PrintInputs()
         {
             Console.WriteLine("Your input: ");
-            Console.WriteLine("  - plate size: {0}", _plateSize);
-            Console.WriteLine("  - sample names: {0}", JsonConvert.SerializeObject(_samples));
-            Console.WriteLine("  - reagent names: {0}", JsonConvert.SerializeObject(_reagents));
-            Console.WriteLine("  - replications: {0}", JsonConvert.SerializeObject(_replications));
-            Console.WriteLine("  - maximum number of plates: {0}", _maxPlates);
+            Console.WriteLine("  - plate size: {0}", PlateSize);
+            Console.WriteLine("  - sample names: {0}", JsonConvert.SerializeObject(Samples));
+            Console.WriteLine("  - reagent names: {0}", JsonConvert.SerializeObject(Reagents));
+            Console.WriteLine("  - replications: {0}", JsonConvert.SerializeObject(Replications));
+            Console.WriteLine("  - maximum number of plates: {0}", MaxPlates);
         }
 
+        /// <summary>
+        /// Optimizes plate-well entries.
+        /// </summary>
         private void OptimizeSetup()
         {
             Console.WriteLine("Optimizing ....");
 
             // Set plate size.
-            var nRows = (_plateSize == 96) ? 8 : 12;
+            var nRows = (PlateSize == 96) ? 8 : 12;
             var nCols = 2 * nRows;
             var wellMatrix = new Well[nRows, nCols];
 
             int row = 0, col = 0;
 
-            for (var experimentIndex = 0; experimentIndex < _replications.Count; experimentIndex++)
+            for (var experimentIndex = 0; experimentIndex < Replications.Count; experimentIndex++)
             {
-                var samples = _samples[experimentIndex];
-                var reagents = _reagents[experimentIndex];
-                var replicationSize = _replications[experimentIndex];
+                var samples = Samples[experimentIndex];
+                var reagents = Reagents[experimentIndex];
+                var replicationSize = Replications[experimentIndex];
 
                 // Iterate over all samples.
                 foreach (var sampleName in samples)
@@ -97,8 +112,8 @@ namespace bs_plates.Classes
                     {
                         for (var repCount = 0; repCount < replicationSize; repCount++)
                         {
-                            var well = new Well(sampleName, reagentName,
-                                string.Format("{0}/{1}", repCount + 1, replicationSize), new Tuple<int, int>(row, col));
+                            var well = new Well(sampleName, reagentName, $"{repCount + 1}/{replicationSize}",
+                                new Tuple<int, int>(row, col));
 
                             wellMatrix[row, col] = well;
                             col++;
@@ -113,14 +128,14 @@ namespace bs_plates.Classes
             Postprocess(wellMatrix);
         }
 
-        private void Preprocess()
-        {
-            Console.WriteLine("Preprocessing ...");
-        }
-
+        /// <summary>
+        /// Postprocessing. Prints out plate.
+        /// </summary>
+        /// <param name="wells">Matrix of wells.</param>
         private void Postprocess(Well[,] wells)
         {
-            Console.WriteLine("hI");
+            Console.WriteLine("Preprocessing ...");
+
             for (var row = 0; row < wells.GetLength(0); row++)
             {
                 for (int col = 0; col < wells.GetLength(1); col++)
@@ -135,13 +150,17 @@ namespace bs_plates.Classes
             PrintPlate();
         }
 
+        /// <summary>
+        /// Prints plate entries.
+        /// </summary>
         private void PrintPlate()
         {
-            Console.WriteLine("Postprocessing ...");
+            // Sort wells by rows and cols.
             var sortedWells = _wells.OrderBy(w => w.Location.Item1)
                 .ThenBy(w => w.Location.Item2)
                 .ToList();
 
+            // Prints plate.
             for (var i = 0; i < sortedWells.Count; i++)
             {
                 if (i > 0)

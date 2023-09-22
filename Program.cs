@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using bs_plates.Classes;
 
 namespace Biosistemika_plates
@@ -46,10 +47,21 @@ namespace Biosistemika_plates
         {
             // Initialize.
             var utcStart = Initialize();
-            
+
+            // Parse run arguments.
+            var jsonPath = string.Empty;
+            if (args.Length > 0)
+            {
+                jsonPath = args[0];
+                if (!File.Exists(jsonPath))
+                {
+                    throw new FileNotFoundException("JSON file '{0}' not found.", jsonPath);
+                }
+            }
+
             // Main logic.
-            var plate = new Plate();
-            
+            var plate = new Plate(jsonPath);
+
             // Finalize.
             Finalize(utcStart);
         }
