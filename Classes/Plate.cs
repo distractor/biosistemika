@@ -92,53 +92,86 @@ namespace bs_plates.Classes
         {
             Console.WriteLine("Optimizing ....");
 
-            // Set plate size.
-            var nRows = (PlateSize == 96) ? 8 : 12;
-            var nCols = 2 * nRows;
-            var wellMatrix = new Well[nRows, nCols];
-
-            int row = 0, col = 0;
-
+            // Build experiment as blocks. One experiment should be as compact as possible.
+            var experimentBlocks = new List<Well[,]>();
+            int row, col;
             for (var experimentIndex = 0; experimentIndex < Replications.Count; experimentIndex++)
             {
                 var samples = Samples[experimentIndex];
                 var reagents = Reagents[experimentIndex];
                 var replicationSize = Replications[experimentIndex];
 
-                // Iterate over all samples.
-                foreach (var sampleName in samples)
+                var experimentMatrix = new Well[replicationSize, samples.Count * reagents.Count()];
+                col = 0;
+
+                // Iterate over all.
+                foreach (var reagentName in reagents)
                 {
-                    foreach (var reagentName in reagents)
+                    foreach (var sampleName in samples)
                     {
+                        row = 0;
                         for (var repCount = 0; repCount < replicationSize; repCount++)
                         {
                             var well = new Well(sampleName, reagentName, $"{repCount + 1}/{replicationSize}",
                                 new Tuple<int, int>(row, col));
 
-                            wellMatrix[row, col] = well;
-                            col++;
+                            experimentMatrix[row, col] = well;
+                            row++;
                         }
+
+                        col++;
+                    }
+
+                    col = 0;
+                }
+
+                experimentBlocks.Add(experimentMatrix);
+            }
+
+            // ***************************
+            // Organize experiment blocks.
+            // ***************************
+
+            // Set plate size.
+            var nRows = (PlateSize == 96) ? 8 : 12;
+            var nCols = 2 * nRows;
+            var wellMatrix = new Well[nRows, nCols];
+            // Write experiment blocks to plate.
+            row = 0;
+            col = 0;
+            foreach (var experiment in experimentBlocks)
+            {
+                for (var i = 0; i < experiment.GetLength(0); i++)
+                {
+                    for (var j = 0; j < experiment.GetLength(1); j++)
+                    {
+                        wellMatrix[row, col] = experiment[i, j];
+                        col++;
                     }
 
                     row++;
                     col = 0;
                 }
+
+                row++;
+                col = 0;
             }
 
             Postprocess(wellMatrix);
         }
 
         /// <summary>
-        /// Postprocessing. Prints out plate.
+        /// Postprocessing. Prints plate.
         /// </summary>
         /// <param name="wells">Matrix of wells.</param>
         private void Postprocess(Well[,] wells)
         {
             Console.WriteLine("Preprocessing ...");
-
+            
+            // Matrix to list.
             for (var row = 0; row < wells.GetLength(0); row++)
             {
-                for (int col = 0; col < wells.GetLength(1); col++)
+                for (var col = 0; col < wells.GetLength(1); col++)
                 {
                     if (wells[row, col] != null)
                     {
@@ -155,23 +188,18 @@ namespace bs_plates.Classes
         /// </summary>
         private void PrintPlate()
         {
-            // Sort wells by rows and cols.
-            var sortedWells = _wells.OrderBy(w => w.Location.Item1)
-                .ThenBy(w => w.Location.Item2)
-                .ToList();
-
             // Prints plate.
-            for (var i = 0; i < sortedWells.Count; i++)
+            for (var i = 0; i < _wells.Count; i++)
             {
                 if (i > 0)
                 {
-                    if (sortedWells[i - 1].Location.Item1 != sortedWells[i].Location.Item1)
+                    if (_wells[i - 1].Location.Item1 != _wells[i].Location.Item1)
                     {
                         Console.Write("\n");
                     }
                 }
 
-                Console.Write("{0}; ", sortedWells[i]);
+                Console.Write("{0}; ", _wells[i]);
             }
 
             Console.Write("\n");
