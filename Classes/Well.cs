@@ -32,5 +32,10 @@ namespace bs_plates.Classes
                 Location.Item2);
             return text;
         }
+
+        public void setLocation(Tuple<int, int> loc)
+        {
+            Location = loc;
+        }
     }
 }

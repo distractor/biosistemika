@@ -46,7 +46,8 @@ namespace bs_plates.Classes
 
             if (totalWellsRequired / PlateSize > MaxPlates)
             {
-                throw new Exception(string.Format("Unfortunately, too many wells required ({0}) with given amount of plates ({1}).",
+                throw new Exception(string.Format(
+                    "Unfortunately, too many wells required ({0}) with given amount of plates ({1}).",
                     totalWellsRequired, MaxPlates));
             }
         }
@@ -128,13 +129,13 @@ namespace bs_plates.Classes
 
                 var experimentMatrix = new Well[replicationSize, samples.Count * reagents.Count()];
                 col = 0;
+                row = 0;
 
                 // Iterate over all.
                 foreach (var reagentName in reagents)
                 {
                     foreach (var sampleName in samples)
                     {
-                        row = 0;
                         for (var repCount = 0; repCount < replicationSize; repCount++)
                         {
                             var well = new Well(sampleName, reagentName, $"{repCount + 1}/{replicationSize}",
@@ -145,9 +146,8 @@ namespace bs_plates.Classes
                         }
 
                         col++;
+                        row = 0;
                     }
-
-                    col = 0;
                 }
 
                 experimentBlocks.Add(experimentMatrix);
@@ -165,8 +165,9 @@ namespace bs_plates.Classes
             // Write experiment blocks to plate.
             row = 0;
             col = 0;
-            foreach (var experiment in experimentBlocks)
+            for (var k = 0; k < experimentBlocks.Count; k++)
             {
+                var experiment = experimentBlocks[k];
                 for (var i = 0; i < experiment.GetLength(0); i++)
                 {
                     for (var j = 0; j < experiment.GetLength(1); j++)
@@ -179,7 +180,6 @@ namespace bs_plates.Classes
                     col = 0;
                 }
 
-                row++;
                 col = 0;
             }
 
@@ -201,6 +201,7 @@ namespace bs_plates.Classes
                 {
                     if (wells[row, col] != null)
                     {
+                        wells[row, col].setLocation(new Tuple<int, int>(row, col));
                         _wells.Add(wells[row, col]);
                     }
                 }

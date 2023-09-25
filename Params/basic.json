@@ -2,22 +2,22 @@
   "plate_size": 96,
   "samples": [
     [
-      "s1",
-      "s2",
-      "s3"
+      "Sam 1",
+      "Sam 2",
+      "Sam 3"
     ],
     [
-      "s1",
-      "s2",
-      "s3"
+      "Sam 1",
+      "Sam 2",
+      "Sam 3"
     ]
   ],
   "reagents": [
     [
-      "a"
+      "Reag Xa"
     ],
     [
-      "b"
+      "Reag Y"
     ]
   ],
   "replications": [
