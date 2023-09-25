@@ -22,8 +22,33 @@ namespace bs_plates.Classes
             // Print the inputs.
             PrintInputs();
 
+            // Preprocess.
+            Preprocess();
             // Optimize setup.
             OptimizeSetup();
+        }
+
+        /// <summary>
+        /// Check if max number of plates is sufficient.
+        /// </summary>
+        /// <exception cref="Exception"></exception>
+        private void Preprocess()
+        {
+            var totalWellsRequired = 0;
+            for (var experimentIndex = 0; experimentIndex < Replications.Count; experimentIndex++)
+            {
+                var samples = Samples[experimentIndex];
+                var reagents = Reagents[experimentIndex];
+                var replicationSize = Replications[experimentIndex];
+
+                totalWellsRequired += samples.Count * reagents.Count * replicationSize;
+            }
+
+            if (totalWellsRequired / PlateSize > MaxPlates)
+            {
+                throw new Exception(string.Format("Unfortunately, too many wells required ({0}) with given amount of plates ({1}).",
+                    totalWellsRequired, MaxPlates));
+            }
         }
 
         /// <summary>
@@ -136,6 +161,7 @@ namespace bs_plates.Classes
             var nRows = (PlateSize == 96) ? 8 : 12;
             var nCols = 2 * nRows;
             var wellMatrix = new Well[nRows, nCols];
+
             // Write experiment blocks to plate.
             row = 0;
             col = 0;
@@ -167,7 +193,7 @@ namespace bs_plates.Classes
         private void Postprocess(Well[,] wells)
         {
             Console.WriteLine("Preprocessing ...");
-            
+
             // Matrix to list.
             for (var row = 0; row < wells.GetLength(0); row++)
             {
